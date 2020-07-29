@@ -81,7 +81,7 @@ class BoolODE(object):
             data['identical_pars'] = job.get('identical_pars',False)
             data['sample_pars'] = job.get('sample_pars',False)
             data['sample_std'] = job.get('sample_std',0.1)
-            data['integration_step_size'] = job.get('integration_step_size',0.01)            
+            data['integration_step_size'] = job.get('integration_step_size',0.01)
             # Optional Settings
             data['parameter_inputs_path'] = Path(self.global_settings.model_dir,\
                                                  job.get('parameter_inputs_path',''))
@@ -98,6 +98,9 @@ class BoolODE(object):
             data['add_dummy'] = job.get('add_dummy',False)
             data['max_parents'] = job.get('max_parents',1)
             data['modeltype'] = self.global_settings.modeltype
+
+            data['perturbation'] = job.get('perturbation',False) 
+            data['perturbated_transcription'] = job.get('perturbated_transcription',{})
 
             jobs[jobid] = data
         return(jobs)

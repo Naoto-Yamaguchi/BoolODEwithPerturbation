@@ -359,6 +359,11 @@ class GenerateModel:
                 if node in self.genelist:
                     self.par[parPrefix + node] = parDefault
 
+        if self.settings['perturbation']:
+            for node in self.settings['perturbated_transcription'].keys():
+                self.par['m_' + node] = self.settings['perturbated_transcription'][node]
+        print(self.par)
+
     def assignSampledParameterValues(self,
                                      parameterNamePrefixAndDefaultsAll,
                                      parameterNamePrefixAndDefaultsGenes):

@@ -14,6 +14,8 @@ jobs:
     num_cells: 300
     do_parallel: True
     sample_cells: False
+    perturbation: True
+    perturbated_transcription: { 'g1': 20.0 }
   # - name: "dyn-LI-1"
   #   model_definition: "dyn-linear.txt"
   #   model_initial_conditions: "dyn-linear_ics.txt"
