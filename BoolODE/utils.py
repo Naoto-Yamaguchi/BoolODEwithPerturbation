@@ -173,7 +173,7 @@ def get_ss(P):
 
 def generateInputFiles(resultDF, BoolDF, withoutRules,
                        parameterInputsDF,tmax,numcells,
-                       outPrefix=''):
+                       perturbation,outPrefix=''):
     """
     Generates input files required from the Beeline pipeline
 
@@ -257,7 +257,12 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
         resultDF.columns = columns
         if parameterInputsDF is not None:
             resultDF = resultDF.drop(withoutRules, axis=0)
-        resultDF.to_csv(str(outPrefix) + '/ExpressionData.csv',sep=',')
+        #perturbation = True
+        if perturbation:
+            filename = '/PerturbatedExpressionData.csv'
+        else:
+            filename = '/ExpressionData.csv'
+        resultDF.to_csv(str(outPrefix) + filename,sep=',')
     else:
         print("Dataset too large."
               "\nSampling %d cells, one from each simulated trajectory." % numcells)
@@ -267,7 +272,13 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
                              index=resultDF.index)
         for c in expdf.columns:
             expdf[c] = resultDF[c]
-        expdf.to_csv(str(outPrefix) + '/ExpressionData.csv',sep=',')
+
+        #perturbation = True    
+        if perturbation:
+            filename = '/PerturbatedExpressionData.csv'
+        else:
+            filename = '/ExpressionData.csv'
+        expdf.to_csv(str(outPrefix) + filename,sep=',')
 
 def sampleTimeSeries(num_timepoints, expnum,\
                      tspan,  P,\
