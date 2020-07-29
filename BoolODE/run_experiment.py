@@ -129,6 +129,7 @@ def Experiment(mg, Model,
     argdict['proteinIndex'] = proteinIndex
     argdict['revvarmapper'] = revvarmapper
     argdict['x_max'] = mg.kineticParameterDefaults['x_max']
+    argdict['perturbation'] = settings['perturbation']
 
     if settings['sample_cells']:
         # pre-define the time points from which a cell will be sampled
@@ -148,6 +149,13 @@ def Experiment(mg, Model,
     if not os.path.exists(simfilepath):
         print(simfilepath, "does not exist, creating it...")
         os.makedirs(simfilepath)
+
+    if settings["perturbation"]:
+        simperfilepath = Path(outPrefix, './simulations_perturbation/')
+        if not os.path.exists(simperfilepath):
+            print(simperfilepath, "does not exist, creating it...")
+            os.makedirs(simperfilepath)
+        
     print('Starting simulations')
     start = time.time()
 
@@ -173,11 +181,18 @@ def Experiment(mg, Model,
     start = time.time()
 
     for cellid in tqdm(range(settings['num_cells'])):
+        if settings["perturbation"]:
+            dirname = '/simulations_perturbation/E'
+        else:
+            dirname = '/simulations/E'
+
         if settings['sample_cells']:
-            df = pd.read_csv(outPrefix + '/simulations/E'+str(cellid) + '-cell.csv',index_col=0)
+            path = outPrefix + dirname +str(cellid) + '-cell.csv'
+            df = pd.read_csv(path,index_col=0)
             df = df.sort_index()                
         else:
-            df = pd.read_csv(outPrefix + '/simulations/E'+str(cellid) + '.csv',index_col=0)
+            path = outPrefix + dirname +str(cellid) + '.csv'
+            df = pd.read_csv(path,index_col=0)
             df = df.sort_index()
             groupedDict['E' + str(cellid)] = df.values.ravel()
         frames.append(df.T)
@@ -244,6 +259,7 @@ def startRun(settings):
                        parameterInputsDF,
                        parameterSetDF,
                        interactionStrengthDF)
+    print(mg.kineticParameterDefaults)
     genesDict = {}
 
     # Load the ODE model file
@@ -265,6 +281,7 @@ def startRun(settings):
                              parameterInputsDF,
                              tmax,
                              settings['num_cells'],
+                             settings['perturbation'],
                              outPrefix=settings['outprefix'])
     print('Input file generation took %0.2f s' % (time.time() - start))
     print("BoolODE.py took %0.2fs"% (time.time() - startfull))
@@ -297,6 +314,7 @@ def simulateAndSample(argdict):
     seed = argdict['seed']
     pars = argdict['pars']
     x_max = argdict['x_max']
+    perturbation = argdict['perturbation']
     
     # Retained for debugging
     isStochastic = True
@@ -317,23 +335,42 @@ def simulateAndSample(argdict):
     tps = [i for i in range(1,len(tspan))]
     ## gene ids
     gid = [i for i,n in varmapper.items() if 'x_' in n]
-    outPrefix = outPrefix + '/simulations/'
+    pid = [i for i,n in varmapper.items() if 'p_' in n]
+    #perturbation = True
+    if perturbation:
+        initial_state_path = outPrefix + '/simulations/'
+        outPrefix = outPrefix + '/simulations_perturbation/'
+    else:
+        outPrefix = outPrefix + '/simulations/'
     while retry:
         seed += 1000
-        y0_exp = simulator.getInitialCondition(ss, ModelSpec, rnaIndex, proteinIndex,
-                                     genelist, proteinlist,
-                                     varmapper,revvarmapper)
+
+        if perturbation:
+            y0_exp = simulator.getInitialConditionOfPerturbation(initial_state_path, cellid)
+        else:
+            y0_exp = simulator.getInitialCondition(ss, ModelSpec, rnaIndex, proteinIndex,
+                                         genelist, proteinlist,
+                                         varmapper,revvarmapper)
+        print(y0_exp)
         
         P = simulator.simulateModel(Model, y0_exp, pars, isStochastic, tspan, seed)
         P = P.T
         retry = False
         ## Extract Time points
         subset = P[gid,:][:,tps]
+        subset_p = P[pid,:][:,tps]
+        #print(subset.shape)
+        #print(subset_p.shape)
         df = pd.DataFrame(subset,
                           index=pd.Index(genelist),
                           columns = ['E' + str(cellid) +'_' +str(i)\
                                      for i in tps])
-        df.to_csv(outPrefix + 'E' + str(cellid) + '.csv')        
+        df.to_csv(outPrefix + 'E' + str(cellid) + '.csv')  
+        df_p = pd.DataFrame(subset_p,
+                    index=pd.Index(genelist),
+                    columns = ['E' + str(cellid) +'_' +str(i)\
+                                for i in tps])
+        df_p.to_csv(outPrefix + 'E' + str(cellid) + '_protein.csv')        
         ## Heuristic:
         ## If the largest value of a protein achieved in a simulation is
         ## less than 10% of the y_max, drop the simulation.

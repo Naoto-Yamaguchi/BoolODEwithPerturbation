@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from scipy.integrate import odeint
 
 def noise(x,t):
     # Controls noise proportional to
@@ -142,3 +144,18 @@ def getInitialCondition(ss, ModelSpec, rnaIndex,
                                       *new_ics[revvarmapper['x_' + genename]]
         new_ics[revvarmapper['p_' + genename.replace('_','')]] = pss
     return(new_ics)
+
+
+def getInitialConditionOfPerturbation(outPrefix, cellid):
+    filename_mRNA = outPrefix + 'E' + str(cellid) + '.csv'
+    filename_protein = outPrefix + 'E' + str(cellid) + '_protein.csv'
+    new_ics = []
+    df_mRNA = pd.read_csv(filename_mRNA, index_col=0)
+    ics_mRNA = df_mRNA[df_mRNA.columns[-1]]
+    df_protein = pd.read_csv(filename_protein, index_col=0)
+    ics_protein = df_protein[df_protein.columns[-1]]
+
+    for mRNA, protein in zip(ics_mRNA, ics_protein):
+        new_ics.append(mRNA)
+        new_ics.append(protein)
+    return new_ics
