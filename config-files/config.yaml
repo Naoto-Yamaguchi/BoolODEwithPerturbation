@@ -7,16 +7,16 @@ global_settings:
 #  modeltype: 'hill'
 
 jobs:
-  - name: "dyn-LL-1"
-    model_definition: "dyn-linear-long.txt"
-    model_initial_conditions: "dyn-linear-long_ics.txt"
+  - name: "dyn-L-1"
+    model_definition: "dyn-linear.txt"
+    model_initial_conditions: "dyn-linear_ics.txt"
     simulation_time: 9
-    num_cells: 300
+    num_cells: 20
     do_parallel: True
     sample_cells: False
     perturbation: True
-    perturbated_transcription: { 'g1': 20.0 }
-  # - name: "dyn-LI-1"
+    perturbed_transcription: { 'g1': 10.0 }
+  # - name: "dyn-LI-1fjakiii
   #   model_definition: "dyn-linear.txt"
   #   model_initial_conditions: "dyn-linear_ics.txt"
   #   simulation_time: 7

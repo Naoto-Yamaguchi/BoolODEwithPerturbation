@@ -173,7 +173,9 @@ def get_ss(P):
 
 def generateInputFiles(resultDF, BoolDF, withoutRules,
                        parameterInputsDF,tmax,numcells,
-                       perturbation,outPrefix=''):
+                       perturbation,perturbed_transcription,perturbed_translation,
+                       perturbation_sampling_time,perturbation_sampling_filename,
+                       outPrefix=''):
     """
     Generates input files required from the Beeline pipeline
 
@@ -259,10 +261,41 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
             resultDF = resultDF.drop(withoutRules, axis=0)
         #perturbation = True
         if perturbation:
-            filename = '/PerturbatedExpressionData.csv'
+            filename = '/perturbedExpressionData.csv'
         else:
             filename = '/ExpressionData.csv'
         resultDF.to_csv(str(outPrefix) + filename,sep=',')
+    elif perturbation:
+        # input:
+            # sampling_time: list
+            # tmax
+            # KO gene: int
+            # num of cells: numcells 
+            # num of genes
+        # output: numpy array of shape (T, G, C, G)
+            # T: len(sampling_time)
+            # G: KO gene
+            # C: num of cells
+            # G: num of genes
+
+        # TODO
+        if len(perturbed_translation) == 0:
+            gene_id = int(list(perturbed_transcription.keys())[0][1:]) - 1 # 1つのKOを想定
+        if len(perturbed_transcription) == 0:
+            gene_id = int(list(perturbed_translation.keys())[0][1:]) - 1 # 1つのKOを想定
+        print(gene_id)
+
+        n_genes = len(resultDF.index)
+        if os.path.isfile(perturbation_sampling_filename):
+            E = np.load(perturbation_sampling_filename)
+        else:
+            E = np.empty((len(perturbation_sampling_time),n_genes,numcells,n_genes))
+        print(E.shape)
+        for idx, time in enumerate(perturbation_sampling_time):
+            E[idx, gene_id, :,:] = resultDF.iloc[:, resultDF.columns.str.endswith("_{}".format(time))].T
+        np.save(perturbation_sampling_filename, E)
+
+
     else:
         print("Dataset too large."
               "\nSampling %d cells, one from each simulated trajectory." % numcells)
@@ -275,7 +308,7 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
 
         #perturbation = True    
         if perturbation:
-            filename = '/PerturbatedExpressionData.csv'
+            filename = '/perturbedExpressionData.csv'
         else:
             filename = '/ExpressionData.csv'
         expdf.to_csv(str(outPrefix) + filename,sep=',')

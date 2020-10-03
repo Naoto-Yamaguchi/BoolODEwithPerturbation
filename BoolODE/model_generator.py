@@ -360,8 +360,12 @@ class GenerateModel:
                     self.par[parPrefix + node] = parDefault
 
         if self.settings['perturbation']:
-            for node in self.settings['perturbated_transcription'].keys():
-                self.par['m_' + node] = self.settings['perturbated_transcription'][node]
+            for node in self.settings['perturbed_transcription'].keys():
+                self.par['m_' + node] = self.settings['perturbed_transcription'][node]
+
+            for node in self.settings['perturbed_translation'].keys():
+                self.par['r_' + node] = self.settings['perturbed_translation'][node]
+
         print(self.par)
 
     def assignSampledParameterValues(self,

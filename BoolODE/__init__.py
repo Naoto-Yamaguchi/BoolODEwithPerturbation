@@ -100,7 +100,11 @@ class BoolODE(object):
             data['modeltype'] = self.global_settings.modeltype
 
             data['perturbation'] = job.get('perturbation',False) 
-            data['perturbated_transcription'] = job.get('perturbated_transcription',{})
+            data['perturbed_transcription'] = job.get('perturbed_transcription',{})
+            data['perturbed_translation'] = job.get('perturbed_translation',{})
+            data['perturbation_input'] = Path(self.global_settings.output_dir, job.get('perturbation_input', ""))
+            data['perturbation_sampling_time'] = job.get('perturbation_sampling_time', [])
+            data['perturbation_sampling_filename'] = job.get('perturbation_sampling_filename', "")
 
             jobs[jobid] = data
         return(jobs)
