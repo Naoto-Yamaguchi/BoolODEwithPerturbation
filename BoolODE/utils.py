@@ -293,6 +293,7 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
         print(E.shape)
         for idx, time in enumerate(perturbation_sampling_time):
             E[idx, gene_id, :,:] = resultDF.iloc[:, resultDF.columns.str.endswith("_{}".format(time))].T
+        print(perturbation_sampling_filename)
         np.save(perturbation_sampling_filename, E)
 
 
