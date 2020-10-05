@@ -1,5 +1,7 @@
 import BoolODE as bo
 import numpy as np
+import pandas as pd
+import re
 
 def perturbation(    
     model_definition, 
@@ -9,11 +11,12 @@ def perturbation(
     perturbed_transcription, 
     perturbed_translation,
     output_dir,
-    output_filename
+    output_filename,
+    modeltype
 ):
     # Normal simulation
     # parameter settings
-    gs = bo.GlobalSettings("data", output_dir, True, False, "heaviside")
+    gs = bo.GlobalSettings("data", output_dir, True, False, modeltype)
     js1 = bo.JobSettings(
     [{
         "name": model_definition[:-4],
@@ -92,8 +95,33 @@ def perturbation(
             boolodejobs.execute_jobs()
             
     E = np.load(output_dir + "/" + output_filename)
+
+    param_filepath = output_dir + "/" + model_definition[:-4] +  "/parameters.txt" # perturbationの有無はgene_names, grn_mtxに影響を与えない。
+    with open(param_filepath, 'r') as f:
+        # obtain gene names
+        df_params = pd.read_csv(param_filepath, sep="\t", skiprows=1, header=None)
+        gene_names = list(df_params[df_params[0].str.contains("^n_")][0].str.replace("n_", ""))
         
-    return E
+        # obtaiin GRN edge matrix
+        grn_mtx = np.zeros((len(gene_names), len(gene_names)))
+        if modeltype == "hill":
+            prefix = "a"
+        elif modeltype == "heaviside":
+            prefix ="w"
+        # TODO 高次の項は無視。alpha, omegaが何を意味するか。
+        df_params_prefix = df_params[df_params[0].str.contains("^{}_".format(prefix))]
+        df_interactions = df_params_prefix[df_params_prefix[0] == df_params_prefix[0].str.replace("{}_(.*)_(.*)_(.*)".format(prefix), r"{}_\1_\2".format(prefix), regex=True)]
+        for i in df_interactions.iterrows():
+            interaction = i[1][0]
+            val = i[1][1]
+
+            result = re.match("{}_(.*)_(.*)".format(prefix), interaction)
+            reg_to = gene_names.index(result.group(1)) 
+            reg_from = gene_names.index(result.group(2)) 
+            grn_mtx[reg_to, reg_from] = val
+        
+        
+    return E, gene_names, grn_mtx
     
 #     if isinstance(trans, float):
 #         hoge

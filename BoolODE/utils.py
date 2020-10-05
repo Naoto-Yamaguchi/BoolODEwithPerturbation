@@ -278,7 +278,7 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
             # C: num of cells
             # G: num of genes
 
-        # TODO
+        # TODO regexpで取る
         if len(perturbed_translation) == 0:
             gene_id = int(list(perturbed_transcription.keys())[0][1:]) - 1 # 1つのKOを想定
         if len(perturbed_transcription) == 0:
@@ -286,7 +286,8 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
         print(gene_id)
 
         n_genes = len(resultDF.index)
-        if os.path.isfile(perturbation_sampling_filename):
+        #if os.path.isfile(perturbation_sampling_filename): # 他のモデルと同時にやると被ってしまう
+        if len(perturbed_transcription) > 1 or len(perturbed_translation) > 1:
             E = np.load(perturbation_sampling_filename)
         else:
             E = np.empty((len(perturbation_sampling_time),n_genes,numcells,n_genes))
