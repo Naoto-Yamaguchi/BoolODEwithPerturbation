@@ -476,6 +476,10 @@ class GenerateModel:
             # Initialize species to 0
             tempStr = node + " = 0"  
             exec(tempStr, boolodespace)
+        print("######################")
+        print(boolodespace)
+        print("hoge")
+        print(self.withRules)
 
         # If there is no rule correspondng to a node, it is either
         # a user specified parameter input, or it is assigned a self loop.
@@ -485,12 +489,18 @@ class GenerateModel:
                 # Initialize variables to 0
                 tempStr = k + " = 0"  
                 exec(tempStr, boolodespace)
-
+        print("$$$$$$")
+        print(boolodespace)
+        print("&&&&&&&&")
+        print(self.parameterInputsDF)
+        print(self.df)
         for i,row in self.df.iterrows():
             # Basal expression:
             # Execute the rule to figure out
             # the value of alpha_0 or omega_0
-            exec('booleval = ' + row['Rule'], boolodespace)         
+            exec('booleval = ' + row['Rule'], boolodespace)  
+            print(row)
+            print(boolodespace['booleval'])       
             if self.settings['modeltype'] == 'hill':
                 self.par['alpha_'+row['Gene']] = int(boolodespace['booleval'])
             elif self.settings['modeltype'] == 'heaviside':

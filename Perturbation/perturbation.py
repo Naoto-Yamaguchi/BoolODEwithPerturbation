@@ -61,7 +61,7 @@ def perturbation(
                 "perturbation_input": model_definition[:-4] + "/simulations/", #ここが同じなら初期状態も同じ
 
                 "perturbation_sampling_time": sampling_time,
-                "perturbation_sampling_filename": output_dir + "/" + output_filename #ここが同じなら出力も同じ
+                "perturbation_sampling_filename": output_dir + "/" + model_definition[:-4] + "-" + output_filename #ここが同じなら出力も同じ
                 # こいつをどこに置くかが問題
             }]
             )
@@ -87,38 +87,28 @@ def perturbation(
                 "perturbation_input": model_definition[:-4] + "/simulations/", #ここが同じなら初期状態も同じ
 
                 "perturbation_sampling_time": sampling_time,
-                "perturbation_sampling_filename": output_dir + "/" + output_filename #ここが同じなら出力も同じ
+                "perturbation_sampling_filename": output_dir + "/" + model_definition[:-4] + "-" + output_filename #ここが同じなら出力も同じ
                 # こいつをどこに置くかが問題
             }]
             )
             boolodejobs = bo.BoolODE(job_settings=js2, global_settings=gs, postproc_settings="")
             boolodejobs.execute_jobs()
             
-    E = np.load(output_dir + "/" + output_filename)
+    E = np.load(output_dir + "/" + model_definition[:-4] + "-" + output_filename)
 
-    param_filepath = output_dir + "/" + model_definition[:-4] +  "/parameters.txt" # perturbationの有無はgene_names, grn_mtxに影響を与えない。
-    with open(param_filepath, 'r') as f:
-        # obtain gene names
-        df_params = pd.read_csv(param_filepath, sep="\t", skiprows=1, header=None)
-        gene_names = list(df_params[df_params[0].str.contains("^n_")][0].str.replace("n_", ""))
-        
-        # obtaiin GRN edge matrix
+    refNetwork_filepath = output_dir + "/" + model_definition[:-4] +  "/refNetwork.csv" # perturbationの有無はgene_names, grn_mtxに影響を与えない。
+    with open(refNetwork_filepath, 'r') as f:
+        df = pd.read_csv(refNetwork_filepath)
+        gene_names = sorted(list(set(df["Gene2"]) | set(df["Gene1"])))
         grn_mtx = np.zeros((len(gene_names), len(gene_names)))
-        if modeltype == "hill":
-            prefix = "a"
-        elif modeltype == "heaviside":
-            prefix ="w"
-        # TODO 高次の項は無視。alpha, omegaが何を意味するか。
-        df_params_prefix = df_params[df_params[0].str.contains("^{}_".format(prefix))]
-        df_interactions = df_params_prefix[df_params_prefix[0] == df_params_prefix[0].str.replace("{}_(.*)_(.*)_(.*)".format(prefix), r"{}_\1_\2".format(prefix), regex=True)]
-        for i in df_interactions.iterrows():
-            interaction = i[1][0]
-            val = i[1][1]
-
-            result = re.match("{}_(.*)_(.*)".format(prefix), interaction)
-            reg_to = gene_names.index(result.group(1)) 
-            reg_from = gene_names.index(result.group(2)) 
-            grn_mtx[reg_to, reg_from] = val
+        
+        for row in df.iterrows():
+            i = gene_names.index(row[1]["Gene2"])
+            j = gene_names.index(row[1]["Gene1"])
+            if row[1]["Type"] == "+":
+                grn_mtx[i][j] = 1
+            elif row[1]["Type"] == "-":
+                grn_mtx[i][j] = -1
         
         
     return E, gene_names, grn_mtx
