@@ -82,8 +82,8 @@ def perturbation(
                 "do_parallel": True,
                 "sample_cells": False,
                 "perturbation": True,
-                "perturbed_transcription": trans,#{ 'g1': 10.0 },
-                #"perturbed_translation": , # 片方を想定
+                #"perturbed_transcription": trans,#{ 'g1': 10.0 },
+                "perturbed_translation": trans, # 片方を想定
                 "perturbation_input": model_definition[:-4] + "/simulations/", #ここが同じなら初期状態も同じ
 
                 "perturbation_sampling_time": sampling_time,
