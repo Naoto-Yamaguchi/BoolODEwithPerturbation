@@ -56,7 +56,7 @@ def perturbation(
                 "do_parallel": False,
                 "sample_cells": False,
                 "perturbation": True,
-                "perturbed_transcription": trans,#{ 'g1': 10.0 },
+                "perturbed_transcription": trans, #{ 'g1': 10.0 },
                 #"perturbed_translation": , # 片方を想定
                 "perturbation_input": model_definition[:-4] + "/simulations/", #ここが同じなら初期状態も同じ
 
@@ -79,11 +79,11 @@ def perturbation(
                 "model_initial_conditions": model_definition + "_ics.txt",
                 "simulation_time": simulation_time,
                 "num_cells": num_cells,
-                "do_parallel": True,
+                "do_parallel": False,
                 "sample_cells": False,
                 "perturbation": True,
-                "perturbed_transcription": trans,#{ 'g1': 10.0 },
-                #"perturbed_translation": , # 片方を想定
+                #"perturbed_transcription": trans,#{ 'g1': 10.0 },
+                "perturbed_translation": trans, # 片方を想定
                 "perturbation_input": model_definition[:-4] + "/simulations/", #ここが同じなら初期状態も同じ
 
                 "perturbation_sampling_time": sampling_time,
