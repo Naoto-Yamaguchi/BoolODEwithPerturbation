@@ -173,7 +173,7 @@ def get_ss(P):
 
 def generateInputFiles(resultDF, BoolDF, withoutRules,
                        parameterInputsDF,tmax,numcells,
-                       perturbation,perturbed_transcription,perturbed_translation,
+                       perturbation, perturbation_control, perturbed_transcription,perturbed_translation,
                        perturbation_sampling_time,perturbation_sampling_filename,
                        outPrefix=''):
     """
@@ -265,45 +265,6 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
         else:
             filename = '/ExpressionData.csv'
         resultDF.to_csv(str(outPrefix) + filename,sep=',')
-    elif perturbation:
-        # input:
-            # sampling_time: list
-            # tmax
-            # KO gene: int
-            # num of cells: numcells 
-            # num of genes
-        # output: numpy array of shape (T, G, C, G)
-            # T: len(sampling_time)
-            # G: KO gene
-            # C: num of cells
-            # G: num of genes
-
-        # TODO regexpで取る. gene_namesをsortしたもののindex
-        gene_names = sorted(list(resultDF.index))
-        print("===============================================")
-        print(perturbed_translation)
-        print(perturbed_transcription)
-
-        if len(perturbed_translation) == 0:
-            gene_id = gene_names.index(list(perturbed_transcription.keys())[0]) # 1つのKOを想定
-        if len(perturbed_transcription) == 0:
-            gene_id = gene_names.index(list(perturbed_translation.keys())[0]) # 1つのKOを想定
-        print(gene_id)
-
-        n_genes = len(resultDF.index)
-        #if os.path.isfile(perturbation_sampling_filename): # 他のモデルと同時にやると被ってしまう
-        #if len(perturbed_transcription) > 1 or len(perturbed_translation) > 1:
-        if os.path.isfile(perturbation_sampling_filename):
-            E = np.load(perturbation_sampling_filename)
-        else:
-            E = np.empty((len(perturbation_sampling_time),n_genes,numcells,n_genes))
-        print(E.shape)
-        for idx, time in enumerate(perturbation_sampling_time):
-            E[idx, gene_id, :,:] = resultDF.iloc[:, resultDF.columns.str.endswith("_{}".format(time))].T
-        print(perturbation_sampling_filename)
-        np.save(perturbation_sampling_filename, E)
-
-
     else:
         print("Dataset too large."
               "\nSampling %d cells, one from each simulated trajectory." % numcells)
@@ -320,6 +281,39 @@ def generateInputFiles(resultDF, BoolDF, withoutRules,
         else:
             filename = '/ExpressionData.csv'
         expdf.to_csv(str(outPrefix) + filename,sep=',')
+
+    if perturbation:
+        print("Perturbation output ...")
+        # input:
+            # sampling_time: list
+            # tmax
+            # KO gene: int
+            # num of cells: numcells 
+            # num of genes
+        # output: numpy array of shape (T, G, C, G)
+            # T: len(sampling_time)
+            # G + 1: control + KO gene
+            # C: num of cells
+            # G: num of genes
+
+        gene_names = sorted(list(resultDF.index))
+
+        if perturbation_control:
+            gene_id = 0
+        elif len(perturbed_transcription) != 0:
+            gene_id = gene_names.index(list(perturbed_transcription.keys())[0]) + 1
+        elif len(perturbed_translation) != 0:
+            gene_id = gene_names.index(list(perturbed_translation.keys())[0]) + 1
+
+        n_genes = len(resultDF.index)
+        if os.path.isfile(perturbation_sampling_filename):
+            E = np.load(perturbation_sampling_filename)
+        else:
+            E = np.zeros((len(perturbation_sampling_time),n_genes+1,numcells,n_genes))
+        for idx, time in enumerate(perturbation_sampling_time):
+            E[idx, gene_id, :,:] = resultDF.iloc[:, resultDF.columns.str.endswith("_{}".format(time))].T
+        np.save(perturbation_sampling_filename, E)
+
 
 def sampleTimeSeries(num_timepoints, expnum,\
                      tspan,  P,\

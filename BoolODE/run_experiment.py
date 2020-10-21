@@ -147,20 +147,9 @@ def Experiment(mg, Model,
         groupedDict = {}         
 
     simfilepath = Path(outPrefix, './simulations/')
-    print(simfilepath)
-    print("~~~~~~~~~~~~~~~~~~~~~~~")
     if not os.path.exists(simfilepath):
         print(simfilepath, "does not exist, creating it...")
         os.makedirs(simfilepath)
-
-    # if settings["perturbation"]:
-    #     #simperfilepath = Path(outPrefix, '-perturbation/simulations/')
-    #     simperfilepath = outPrefix + "-perturbation/simulations/"
-    #     print(simperfilepath)
-    #     print("==============================")
-    #     if not os.path.exists(simperfilepath):
-    #         print(simperfilepath, "does not exist, creating it...")
-    #         os.makedirs(simperfilepath)
         
     print('Starting simulations')
     start = time.time()
@@ -183,14 +172,10 @@ def Experiment(mg, Model,
 
     print("Simulations took %0.3f s"%(time.time() - start))
     frames = []
-    print('starting to concat files')
+    #print('starting to concat files')
     start = time.time()
 
     for cellid in tqdm(range(settings['num_cells'])):
-        # if settings["perturbation"]:
-        #     dirname = '-perturbation/simulations/E'
-        # else:
-        #     dirname = '/simulations/E'
         dirname = '/simulations/E'
 
         if settings['sample_cells']:
@@ -266,7 +251,7 @@ def startRun(settings):
                        parameterInputsDF,
                        parameterSetDF,
                        interactionStrengthDF)
-    print(mg.kineticParameterDefaults)
+    #print(mg.kineticParameterDefaults)
     genesDict = {}
 
     # Load the ODE model file
@@ -289,6 +274,7 @@ def startRun(settings):
                              tmax,
                              settings['num_cells'],
                              settings['perturbation'],
+                             settings['perturbation_control'],
                              settings['perturbed_transcription'],
                              settings['perturbed_translation'],
                              settings['perturbation_sampling_time'],
@@ -348,14 +334,10 @@ def simulateAndSample(argdict):
     ## gene ids
     gid = [i for i,n in varmapper.items() if 'x_' in n]
     pid = [i for i,n in varmapper.items() if 'p_' in n]
-    #perturbation = True
+
     if perturbation:
         initial_state_path = str(perturbation_input) + "/"
-        print(initial_state_path)
-    #     outPrefix outPrefix + '/simulations/'
-    #     # outPrefix = outPrefix + '-perturbation/simulaitons/'
-    #     # print(outPrefix)
-    #     # print("!!!!!!!!!!!!!!!!!!!")
+
     # else:
     outPrefix = outPrefix + '/simulations/'
     while retry:
@@ -367,7 +349,6 @@ def simulateAndSample(argdict):
             y0_exp = simulator.getInitialCondition(ss, ModelSpec, rnaIndex, proteinIndex,
                                          genelist, proteinlist,
                                          varmapper,revvarmapper)
-        print(y0_exp)
         
         P = simulator.simulateModel(Model, y0_exp, pars, isStochastic, tspan, seed)
         P = P.T
@@ -375,8 +356,6 @@ def simulateAndSample(argdict):
         ## Extract Time points
         subset = P[gid,:][:,tps]
         subset_p = P[pid,:][:,tps]
-        #print(subset.shape)
-        #print(subset_p.shape)
         df = pd.DataFrame(subset,
                           index=pd.Index(genelist),
                           columns = ['E' + str(cellid) +'_' +str(i)\
